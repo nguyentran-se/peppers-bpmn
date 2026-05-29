@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0"
+             targetNamespace="http://bpmn.io/schema/bpmn"
+             id="Definitions_1">
+
+  <process id="leave-request"
+           name="Leave Request Approval"
+           isExecutable="true"
+           camunda:historyTimeToLive="30">
+
+    <startEvent id="start" name="Leave Requested">
+      <outgoing>flow1</outgoing>
+    </startEvent>
+
+    <userTask id="task-review"
+              name="Review Leave Request"
+              camunda:assignee="demo">
+      <incoming>flow1</incoming>
+      <outgoing>flow2</outgoing>
+    </userTask>
+
+    <exclusiveGateway id="gateway-decision" name="Approved?">
+      <incoming>flow2</incoming>
+      <outgoing>flow-approved</outgoing>
+      <outgoing>flow-rejected</outgoing>
+    </exclusiveGateway>
+
+    <endEvent id="end-approved" name="Leave Approved">
+      <incoming>flow-approved</incoming>
+    </endEvent>
+
+    <endEvent id="end-rejected" name="Leave Rejected">
+      <incoming>flow-rejected</incoming>
+    </endEvent>
+
+    <sequenceFlow id="flow1"
+                  sourceRef="start"
+                  targetRef="task-review" />
+
+    <sequenceFlow id="flow2"
+                  sourceRef="task-review"
+                  targetRef="gateway-decision" />
+
+    <sequenceFlow id="flow-approved"
+                  name="Yes"
+                  sourceRef="gateway-decision"
+                  targetRef="end-approved">
+      <conditionExpression xsi:type="tFormalExpression">
+        ${approved == true}
+      </conditionExpression>
+    </sequenceFlow>
+
+    <sequenceFlow id="flow-rejected"
+                  name="No"
+                  sourceRef="gateway-decision"
+                  targetRef="end-rejected">
+      <conditionExpression xsi:type="tFormalExpression">
+        ${approved == false}
+      </conditionExpression>
+    </sequenceFlow>
+
+  </process>
+
+</definitions>

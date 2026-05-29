@@ -17,15 +17,20 @@ public class CamundaClient
 
     public async Task<CamundaDeploymentResponse> DeployAsync(string bpmnXml, string resourceName, CancellationToken ct)
     {
+        var filename = resourceName.EndsWith(".bpmn", StringComparison.OrdinalIgnoreCase)
+                    || resourceName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
+            ? resourceName
+            : resourceName + ".bpmn";
+
         using var content = new MultipartFormDataContent();
         var xmlBytes = Encoding.UTF8.GetBytes(bpmnXml);
         var fileContent = new ByteArrayContent(xmlBytes);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-        content.Add(fileContent, "data", resourceName);
-        content.Add(new StringContent(resourceName), "deployment-name");
+        content.Add(fileContent, "data", filename);
+        content.Add(new StringContent(filename), "deployment-name");
 
         var response = await _http.PostAsync("deployment/create", content, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
 
         var json = await response.Content.ReadAsStringAsync(ct);
         return JsonSerializer.Deserialize<CamundaDeploymentResponse>(json, JsonOptions)!;
@@ -37,7 +42,7 @@ public class CamundaClient
         var content = new StringContent(body, Encoding.UTF8, "application/json");
 
         var response = await _http.PostAsync($"process-definition/key/{processKey}/start", content, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
 
         var json = await response.Content.ReadAsStringAsync(ct);
         return JsonSerializer.Deserialize<CamundaProcessInstanceResponse>(json, JsonOptions)!;
@@ -50,7 +55,7 @@ public class CamundaClient
         var content = new StringContent(body, Encoding.UTF8, "application/json");
 
         var response = await _http.PostAsync($"task/{taskId}/complete", content, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
     }
 
     public async Task<IEnumerable<CamundaTaskResponse>> GetTasksAsync(string? processInstanceId, CancellationToken ct)
@@ -60,7 +65,7 @@ public class CamundaClient
             url += $"?processInstanceId={Uri.EscapeDataString(processInstanceId)}";
 
         var response = await _http.GetAsync(url, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
 
         var json = await response.Content.ReadAsStringAsync(ct);
         return JsonSerializer.Deserialize<IEnumerable<CamundaTaskResponse>>(json, JsonOptions) ?? [];
@@ -73,7 +78,7 @@ public class CamundaClient
             url += $"?processDefinitionKey={Uri.EscapeDataString(processKey)}";
 
         var response = await _http.GetAsync(url, ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
 
         var json = await response.Content.ReadAsStringAsync(ct);
         return JsonSerializer.Deserialize<IEnumerable<CamundaProcessInstanceResponse>>(json, JsonOptions) ?? [];
@@ -82,10 +87,20 @@ public class CamundaClient
     public async Task<IEnumerable<CamundaProcessDefinitionResponse>> GetProcessDefinitionsAsync(CancellationToken ct)
     {
         var response = await _http.GetAsync("process-definition", ct);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, ct);
 
         var json = await response.Content.ReadAsStringAsync(ct);
         return JsonSerializer.Deserialize<IEnumerable<CamundaProcessDefinitionResponse>>(json, JsonOptions) ?? [];
+    }
+
+    private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        if (response.IsSuccessStatusCode) return;
+        var body = await response.Content.ReadAsStringAsync(ct);
+        throw new HttpRequestException(
+            $"Camunda {(int)response.StatusCode}: {body}",
+            null,
+            response.StatusCode);
     }
 
     private static Dictionary<string, object>? WrapVariables(Dictionary<string, object>? variables)

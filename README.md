@@ -15,7 +15,7 @@ docker-compose up -d
 | Service | URL | Credentials |
 |---------|-----|-------------|
 | Camunda Cockpit | http://localhost:8080/camunda | demo / demo |
-| PostgreSQL | localhost:5432 | postgres / postgres |
+| PostgreSQL | localhost:5433 | postgres / postgres |
 
 ### 2. Run the Backend API
 

@@ -8,4 +8,4 @@ public record ProcessDefinitionDto(
     string Name,
     int Version,
     string ResourceName,
-    DateTime DeployedAt);
+    string DeployedAt);

@@ -26,6 +26,12 @@ public class ExceptionHandlingMiddleware
             _logger.LogWarning(ex, "Domain exception: {Message}", ex.Message);
             await WriteErrorAsync(context, HttpStatusCode.BadRequest, ex.Message);
         }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Camunda error: {Message}", ex.Message);
+            var status = ex.StatusCode ?? HttpStatusCode.BadGateway;
+            await WriteErrorAsync(context, status, ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");

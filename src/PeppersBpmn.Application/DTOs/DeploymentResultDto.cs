@@ -3,5 +3,5 @@ namespace PeppersBpmn.Application.DTOs;
 public record DeploymentResultDto(
     string DeploymentId,
     string Name,
-    DateTime DeployedAt,
+    string DeployedAt,
     IEnumerable<ProcessDefinitionDto> DeployedDefinitions);

@@ -28,7 +28,7 @@ public class GetProcessDefinitionsQueryHandler : IRequestHandler<GetProcessDefin
                 d.Name,
                 d.Version,
                 d.ResourceName,
-                d.DeployedAt));
+                d.DeployedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
 
         return new PagedResult<ProcessDefinitionDto>
         {

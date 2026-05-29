@@ -87,6 +87,6 @@ public class CamundaService : ICamundaService
             d.Name ?? d.Key,
             d.Version,
             d.Resource ?? string.Empty,
-            DateTime.UtcNow));
+            DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
     }
 }

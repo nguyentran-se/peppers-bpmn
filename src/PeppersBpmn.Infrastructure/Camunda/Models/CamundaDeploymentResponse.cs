@@ -11,7 +11,7 @@ public class CamundaDeploymentResponse
     public string Name { get; set; } = string.Empty;
 
     [JsonPropertyName("deploymentTime")]
-    public DateTime DeploymentTime { get; set; }
+    public string DeploymentTime { get; set; } = string.Empty;
 
     [JsonPropertyName("deployedProcessDefinitions")]
     public Dictionary<string, CamundaProcessDefinitionResponse>? DeployedProcessDefinitions { get; set; }
